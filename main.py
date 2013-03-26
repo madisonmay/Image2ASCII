@@ -14,6 +14,12 @@ def menu():
    elif (order=='exit'): return
    else: menu()
 
+def delete_f():
+   try:
+      s=raw_input('Enter a file name: ')
+      os.remove(s)
+   except AttributeError: print('Input is not a valid file in this directory.')
+
 def get_agray(s):
    im = Image.open(s+'.jpg')
    imageW = im.size[0]
@@ -62,12 +68,6 @@ def printAscii(pic):
 #         print(type(pixel), type(asciiGroup))
          printed = printed + asciiGroup[len(asciiGroup) - 1 - (pixel * len(asciiGroup))//256]
       print(printed)
-
-def delete_f():
-   try:
-      s=raw_input('Enter a file name: ')
-      os.remove(s)
-   except AttributeError: print('Input is not a valid file in this directory.')
 
 #pic = get_agray('smiley')
 pic = scale('smiley', 20, 35)
