@@ -1,4 +1,5 @@
 # http://www.johndcook.com/blog/2009/08/24/algorithms-convert-color-grayscale/
+# Made by the illustrious Bill Warner, Madison May, Mitchell Kwock, and Jacob Kingery
 from PIL import Image
 from PIL import ImageFilter
 from PIL import ImageOps
