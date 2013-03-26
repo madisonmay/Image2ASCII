@@ -1,4 +1,5 @@
 # http://www.johndcook.com/blog/2009/08/24/algorithms-convert-color-grayscale/
+# test comment for github
 from PIL import Image
 from PIL import ImageFilter
 from PIL import ImageOps
