@@ -8,17 +8,10 @@ import pylab
 import time
 
 name = raw_input("Name of Picture: ")
-#sig = raw_input("Sigma Value: ")
-#sigma = int(sig)
 
 im = ndimage.imread(name, True)
 
 height = len(im)
-
-# Find contours at a constant value of 0.8
-
-# Display the image and plot all contours found
-#plt.imshow(im, interpolation='nearest')
 
 num = 9
 multiple = 25
