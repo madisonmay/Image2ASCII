@@ -69,8 +69,8 @@ def printAscii(pic):
    for row in pic:
 #      printed = ''
       for pixel in row:
-         printed = printed + asciiGroup[int((pixel * len(asciiGroup)//256))]
-#         printed = printed + asciiGroup[int(len(asciiGroup) - (pixel * len(asciiGroup))//256 - 1)]
+#         printed = printed + asciiGroup[int((pixel * len(asciiGroup)//256))]
+         printed = printed + asciiGroup[int(len(asciiGroup) - (pixel * len(asciiGroup))//256 - 1)]
       printed = printed + '\n'
    print(printed)
 
@@ -80,7 +80,7 @@ def printAscii(pic):
 
 if(__name__ == '__main__'):
    start = time.clock()
-   pic = scale('Georgy')
+   pic = scale('car')
    printAscii(pic)
    end = time.clock()
    print(end - start)
