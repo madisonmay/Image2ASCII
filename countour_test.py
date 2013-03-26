@@ -1,23 +1,47 @@
 from skimage import data
 from skimage import measure
-
+from scipy import ndimage
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
-# Construct some test data
-x, y = np.ogrid[-np.pi:np.pi:100j, -np.pi:np.pi:100j]
-r = np.sin(np.exp((np.sin(x)**3 + np.cos(y)**2)))
+import pylab
+import time
+
+name = raw_input("Name of Picture: ")
+#sig = raw_input("Sigma Value: ")
+#sigma = int(sig)
+
+im = ndimage.imread(name, True)
+
+height = len(im)
 
 # Find contours at a constant value of 0.8
-contours = measure.find_contours(r, 0.8)
 
 # Display the image and plot all contours found
-plt.imshow(r, interpolation='nearest')
+#plt.imshow(im, interpolation='nearest')
 
-for n, contour in enumerate(contours):
-    plt.plot(contour[:, 1], contour[:, 0], linewidth=2)
+num = 9
+multiple = 25
 
-plt.axis('image')
-plt.xticks([])
-plt.yticks([])
-plt.show()
+all_cont = []
+
+for i in range(0, num, 1):
+	contours = measure.find_contours(im, i * multiple)
+	all_cont.append(contours)
+	num_cont = 0
+	pylab.subplot(300 + 10 * num / 3 + i + 1)
+	for n, contour in enumerate(contours):
+		pylab.plot(contour[:, 1], height - contour[:, 0], linewidth=2)
+	pylab.title("Value of sigma: " + str(i * multiple))
+	pylab.draw()
+	start = time.time()
+	counter = 0
+	pylab.draw()
+	print(i)
+
+pylab.figure(2)
+for i in range(2, len(all_cont)):
+	for n, contour in enumerate(all_cont[i]):
+		pylab.plot(contour[:, 1], height - contour[:, 0], linewidth=2)
+
+pylab.show()

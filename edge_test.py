@@ -8,6 +8,7 @@ name = raw_input("Name of Picture: ")
 
 im = ndimage.imread(name, True)
 
+
 while(True):
 	temp = raw_input("Sigma Value?: ")
 	sig = int(temp)
