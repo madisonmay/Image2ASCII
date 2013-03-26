@@ -4,6 +4,7 @@ from PIL import ImageFilter
 from PIL import ImageOps
 import os
 
+
 asciiGroup = [' ', '.', '-', 'o', '*', '%', '#']
 
 def menu():
@@ -49,7 +50,7 @@ def scale(s, height, width):
          number = 0
          for m in range(int(i * yPortion),int((i + 1) * yPortion)):
             for n in range(int(j * xPortion), int((j + 1) * xPortion)):
-               total = total + pic[m][n]
+               total = total + pic[n][m]
                number = number + 1
          row.append(total // number)
       new_pic.append(row)
@@ -60,7 +61,8 @@ def printAscii(pic):
       printed = ''
       for pixel in row:
 #         print(type(pixel), type(asciiGroup))
-         printed = printed + asciiGroup[len(asciiGroup) - 1 - (pixel * len(asciiGroup))//256]
+         # printed = printed + asciiGroup[int((pixel * len(asciiGroup))/256)]
+         printed = printed + asciiGroup[len(asciiGroup) - 1 - int((pixel * len(asciiGroup))/256)]
       print(printed)
 
 def delete_f():
@@ -70,5 +72,5 @@ def delete_f():
    except AttributeError: print('Input is not a valid file in this directory.')
 
 #pic = get_agray('smiley')
-pic = scale('smiley', 20, 35)
+pic = scale('car', 300, 60)
 printAscii(pic)
