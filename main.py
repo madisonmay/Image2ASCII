@@ -4,18 +4,28 @@ from PIL import Image
 from PIL import ImageFilter
 from PIL import ImageOps
 import time
-import os
-from numpy import array
-
 import cProfile
 
 '''
+/begin_author("Mitchell")
+
 Currently, this works at converting any type of picture to an
 ASCII gradient-based text.  Only contains 7 different characters
 or shades, so be sure to modify that if necessary.
+
+There are TWO versions.  Version 1 is reliable, but currently about
+a factor of 70 times as slow.  Version 2 is also reliable and considerably
+Faster.  I wouldn't even try Version 1 anymore.
+
+Most of the general code can be changed in begin() for higher level options.
+So make sure that that's where things are modified around the actual processor.
+
+/end_author("Mitchell")
 '''
 
-###### CONFIGURATIONS #####
+
+
+##### BEGIN CONFIGURATIONS #####
 
 #The Dictionary for the ASCII gradient.  Order from LEAST dense to MOST dense
 asciiGroup = [' ', '.', '-', 'o', '*', '%', '#']
@@ -29,7 +39,19 @@ ask_for_res = True
 #Scale the gradient so that it ranges from 0 to 255 regardless of the original color range
 scale_gray = True
 
-def get_agray(s):
+#Which version of the converter to use.
+#Version 1: Opens the image and scales it down
+#Version 2: Opens the image using draft to prescale it before hand
+version = 2
+
+##### END CONFIGURATIONS #####
+
+
+
+
+##### BEGIN VERSION 1 #####
+
+def get_agray(s): #DEPRECATED, IMPROVED IN get_grayscale.  If you want to test, use VERION 1
    '''
    Takes an image and returns the GRAY SCALE version of the image regardless of the file type.
    The GRAY SCALE version is a 2-Dimensional array of the GRAYdient.  (A single value 0-255)
@@ -37,7 +59,6 @@ def get_agray(s):
    im = Image.open(s)
    imHeight = im.size[1]
    imWidth = im.size[0]
-#   im.draft('G')
    gray = []
    for y in range(imHeight):
       gray.append([])
@@ -104,13 +125,65 @@ def scale(s, x = 144, y = -1):
                new_pic[i][j] = int((new_pic[i][j] - lowest) * 255 / (highest - lowest))
    return new_pic
 
+##### END VERSION 1 #####
+
+##### BEGIN VERSION 2 #####
+
+def get_grayscale(s, x = -1, y = -1):
+   im = Image.open(s)
+   height = im.size[1]
+   width = im.size[0]
+   if(x < 1):
+      w = 144
+   else:
+      w = x
+   if(y > 0):
+      h = y
+   else:
+      scaled = 0.5 * w * height // (width)
+      h = int(scaled)
+
+   size = (w, h)
+   im.draft("L", im.size)
+   im = im.resize(size)
+
+   highest = 0
+   lowest = 255
+   gray = []
+   for y in range(h):
+      gray.append([])
+      for x in range(w):
+         val = im.getpixel((x,y))
+         if(type(val) is int):
+            weighted = val
+         else: #Necessary for PNG's.  Weights the values then scales them according to the transparency
+            weighted = val[0] * 0.21 + val[1] * 0.71 + val[2] * 0.07
+            weighted = weighted * val[3] // 255
+         gray[y].append(weighted)
+         if(weighted > highest):
+            highest = weighted
+         if(weighted < lowest):
+            lowest = weighted
+
+   if scale_gray and highest != lowest:
+      for i in range(len(gray)):
+         for j in range(len(gray[i])):
+            gray[i][j] = int((gray[i][j] - lowest) * 255 / (highest - lowest))
+   return gray
+
+##### END VERSION 2 #####
+
+def ticktock(function, param):
+   '''Made as a test function.  Largely ignorable'''
+   start = time.time()
+   function(param)
+   print(time.time() - start)
+
 def printAscii(pic, isInverted = False):
    '''Uses ASCIIgroup and the grayscale obtained from scale to print the ascii picture'''
    printed = ''
    for row in pic:
       for pixel in row:
-         if(type(pixel) is str):
-            print pixel
          if(not isInverted):
             printed = printed + asciiGroup[int((pixel * len(asciiGroup)//256))]
          else:
@@ -134,25 +207,37 @@ def ask_for_int(s):
    return value
 
 def begin():
+   '''Using Configurations to process whatever image with needs in order
+   to make the ASCII image.  Prints out in the terminal, but can be printed
+   to a text file if pipelined into one.'''
    pic = raw_input("Name of Image: ")
-   inverted = False
    typed = raw_input("Invert colors? [y|N] ")
-   if(typed.lower() == "y"):
-      inverted = True
-   width = -1
-   height = -1
    if(ask_for_res):
       width = ask_for_int("What width? ")
       height = ask_for_int("What height? ")
    if(raw_input("Scale Gradient? [Y|n] ").lower() == "n"):
       scale_gray = False
-   start = time.clock()
-   if(width > 0 or height > 0):
-      ascii = scale(pic, width, height)
+
+   inverted = False
+   if(typed.lower() == "y"):
+      inverted = True
    else:
-      ascii = scale(pic)
+      width = -1
+      height = -1      
+   start = time.clock()
+   if version is 2:
+      if(width > 0 or height > 0):
+         ascii = get_grayscale(pic, width, height)
+      else:
+         ascii = get_grayscale(pic)
+   elif version is 1:
+      if(width > 0 or height > 0):
+         ascii = scale(pic, width, height)
+      else:
+         ascii = scale(pic)
    printAscii(ascii, inverted)
    if(display_run_time):
       print(time.clock() - start)
 
-cProfile.run('begin()')
+if(__name__ == "__main__"):
+   begin()

@@ -7,7 +7,7 @@ from random import randint
 
 #Opening and formating image
 cRatio = 6
-img = misc.imread('alec.png')
+img = misc.imread('rainbow.jpg')
 height,width = img.shape[0],img.shape[1]
 print width,height
 pixels = width*height
