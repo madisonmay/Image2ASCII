@@ -6,6 +6,7 @@ from PIL import ImageOps
 import time
 import cProfile
 
+
 '''
 /begin_author("Mitchell")
 
@@ -46,7 +47,7 @@ version = 2
 
 ##### END CONFIGURATIONS #####
 
-
+start = time.time()
 
 
 ##### BEGIN VERSION 1 #####
@@ -173,11 +174,7 @@ def get_grayscale(s, x = -1, y = -1):
 
 ##### END VERSION 2 #####
 
-def ticktock(function, param):
-   '''Made as a test function.  Largely ignorable'''
-   start = time.time()
-   function(param)
-   print(time.time() - start)
+#### Misc. QOL functions useful for timing and testing
 
 def printAscii(pic, isInverted = False):
    '''Uses ASCIIgroup and the grayscale obtained from scale to print the ascii picture'''
@@ -206,30 +203,33 @@ def ask_for_int(s):
          print("NaN")
    return value
 
+def tick(): #Resets start time
+   global start 
+   start = time.time()
+
+def tock(): #Prints time since start time in seconds
+   print(time.time() - start)
+
 def begin():
    '''Using Configurations to process whatever image with needs in order
    to make the ASCII image.  Prints out in the terminal, but can be printed
    to a text file if pipelined into one.'''
+   global scale_gray
    pic = raw_input("Name of Image: ")
    typed = raw_input("Invert colors? [y|N] ")
    if(ask_for_res):
       width = ask_for_int("What width? ")
       height = ask_for_int("What height? ")
-   if(raw_input("Scale Gradient? [Y|n] ").lower() == "n"):
-      scale_gray = False
-
-   inverted = False
-   if(typed.lower() == "y"):
-      inverted = True
    else:
       width = -1
       height = -1      
-   start = time.clock()
+   if(raw_input("Scale Gradient? [Y|n] ").lower() == "n"):
+      scale_gray = False
+   inverted = typed.lower() == "y"
+
+   tick()
    if version is 2:
-      if(width > 0 or height > 0):
-         ascii = get_grayscale(pic, width, height)
-      else:
-         ascii = get_grayscale(pic)
+      ascii = get_grayscale(pic, width, height)
    elif version is 1:
       if(width > 0 or height > 0):
          ascii = scale(pic, width, height)
@@ -237,7 +237,7 @@ def begin():
          ascii = scale(pic)
    printAscii(ascii, inverted)
    if(display_run_time):
-      print(time.clock() - start)
+      tock()
 
 if(__name__ == "__main__"):
    begin()
