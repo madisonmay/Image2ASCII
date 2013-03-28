@@ -29,6 +29,11 @@ So make sure that that's where things are modified around the actual processor.
 ##### BEGIN CONFIGURATIONS #####
 
 #The Dictionary for the ASCII gradient.  Order from LEAST dense to MOST dense
+# Padded spaces at the end of this dictionary can effectively "White Balance"
+# Could also consider scaling gradient of only high and low values
+asciiWeb = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'..........                "
+asciiWeb = asciiWeb[::-1]
+#asciiGroup = list(asciiWeb)
 asciiGroup = [' ', '.', '-', 'o', '*', '%', '#']
 
 #Display the total time it requires to convert the image from image to ASCII
