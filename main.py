@@ -176,15 +176,16 @@ def get_grayscale(s, x = -1, y = -1):
 
 #### Misc. QOL functions useful for timing and testing
 
+
 def printAscii(pic, isInverted = False):
    '''Uses ASCIIgroup and the grayscale obtained from scale to print the ascii picture'''
    printed = ''
    for row in pic:
       for pixel in row:
-         if(not isInverted):
-            printed = printed + asciiGroup[int((pixel * len(asciiGroup)//256))]
-         else:
+         if isInverted:
             printed = printed + asciiGroup[int(len(asciiGroup) - (pixel * len(asciiGroup))//256 - 1)]
+         else:
+            printed = printed + asciiGroup[int((pixel * len(asciiGroup)//256))]
       printed = printed + '\n'
    print(printed)
 
@@ -204,7 +205,7 @@ def ask_for_int(s):
    return value
 
 def tick(): #Resets start time
-   global start 
+   global start
    start = time.time()
 
 def tock(): #Prints time since start time in seconds
@@ -222,7 +223,7 @@ def begin():
       height = ask_for_int("What height? ")
    else:
       width = -1
-      height = -1      
+      height = -1
    if(raw_input("Scale Gradient? [Y|n] ").lower() == "n"):
       scale_gray = False
    inverted = typed.lower() == "y"
@@ -235,7 +236,9 @@ def begin():
          ascii = scale(pic, width, height)
       else:
          ascii = scale(pic)
+
    printAscii(ascii, inverted)
+
    if(display_run_time):
       tock()
 
