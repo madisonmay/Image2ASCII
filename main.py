@@ -3,6 +3,7 @@
 from PIL import Image
 from PIL import ImageFilter
 from PIL import ImageOps
+from PIL import ImageEnhance
 import time
 import cProfile
 
@@ -57,79 +58,79 @@ start = time.time()
 
 ##### BEGIN VERSION 1 #####
 
-def get_agray(s): #DEPRECATED, IMPROVED IN get_grayscale.  If you want to test, use VERION 1
-   '''
-   Takes an image and returns the GRAY SCALE version of the image regardless of the file type.
-   The GRAY SCALE version is a 2-Dimensional array of the GRAYdient.  (A single value 0-255)
-   '''
-   im = Image.open(s)
-   imHeight = im.size[1]
-   imWidth = im.size[0]
-   gray = []
-   for y in range(imHeight):
-      gray.append([])
-      for x in range(imWidth):
-         xy = (x, y)
-         colored = im.getpixel(xy)
-         if(type(colored) is int):
-            weighted = colored
-         else:
-            weighted = colored[0] * 0.21 + colored[1] * 0.71 + colored[2] * 0.07
-         gray[y].append(weighted)
-   return gray
+# def get_agray(s): #DEPRECATED, IMPROVED IN get_grayscale.  If you want to test, use VERION 1
+#    '''
+#    Takes an image and returns the GRAY SCALE version of the image regardless of the file type.
+#    The GRAY SCALE version is a 2-Dimensional array of the GRAYdient.  (A single value 0-255)
+#    '''
+#    im = Image.open(s)
+#    imHeight = im.size[1]
+#    imWidth = im.size[0]
+#    gray = []
+#    for y in range(imHeight):
+#       gray.append([])
+#       for x in range(imWidth):
+#          xy = (x, y)
+#          colored = im.getpixel(xy)
+#          if(type(colored) is int):
+#             weighted = colored
+#          else:
+#             weighted = colored[0] * 0.21 + colored[1] * 0.71 + colored[2] * 0.07
+#          gray[y].append(weighted)
+#    return gray
 
-def scale(s, x = 144, y = -1):
-   '''Scales and converts a picture into a suitable grayscale equivalent.  Can also scale the gradient if scale_gray is True.
-   This is the primary function used to convert the picture.
-   '''
-   pic = get_agray(s)
-   if(x < 1):
-      w = 144
-   else:
-      w = x
-   if(y > 0):
-      h = y
-   else:
-      scaled = 0.5 * w * len(pic) // (len(pic[0]))
-      h = int(scaled)
-   xPortion = len(pic) / float(h)
-   yPortion = len(pic[0]) / float(w)
+# def scale(s, x = 144, y = -1):
+#    '''Scales and converts a picture into a suitable grayscale equivalent.  Can also scale the gradient if scale_gray is True.
+#    This is the primary function used to convert the picture.
+#    '''
+#    pic = get_agray(s)
+#    if(x < 1):
+#       w = 144
+#    else:
+#       w = x
+#    if(y > 0):
+#       h = y
+#    else:
+#       scaled = 0.5 * w * len(pic) // (len(pic[0]))
+#       h = int(scaled)
+#    xPortion = len(pic) / float(h)
+#    yPortion = len(pic[0]) / float(w)
 
-   highest = 0
-   lowest = 255
+#    highest = 0
+#    lowest = 255
 
-   new_pic = []
-   for j in range(h): #Goes through each row
-      row = []
-      for i in range(w): #Goes through portion of a row
-         total = 0
-         number = 0
-         ended = False
-         for n in range(int(j * xPortion), int((j + 1) * xPortion)):
-            for m in range(int(i * yPortion),int((i + 1) * yPortion)):
-               try:
-                  total = total + pic[n][m]
-               except IndexError:
-                  print('Error')
-                  ended = True
-               number = number + 1
-         if not ended:
-            if(number > 0):
-               value = total / float(number)
-               row.append(value)
-            else:
-               value = 0
-               row.append(value)
-            if(value > highest):
-               highest = value
-            if(value < lowest):
-               lowest = value
-      new_pic.append(row)
-   if(scale_gray):
-         for i in range(len(new_pic)):
-            for j in range(len(new_pic[i])):
-               new_pic[i][j] = int((new_pic[i][j] - lowest) * 255 / (highest - lowest))
-   return new_pic
+#    new_pic = []
+#    for j in range(h): #Goes through each row
+#       row = []
+#       for i in range(w): #Goes through portion of a row
+#          total = 0
+#          number = 0
+#          ended = False
+#          for n in range(int(j * xPortion), int((j + 1) * xPortion)):
+#             for m in range(int(i * yPortion),int((i + 1) * yPortion)):
+#                try:
+#                   total = total + pic[n][m]
+#                except IndexError:
+#                   print('Error')
+#                   ended = True
+#                number = number + 1
+#          if not ended:
+#             if(number > 0):
+#                value = total / float(number)
+#                row.append(value)
+#             else:
+#                value = 0
+#                row.append(value)
+#             if(value > highest):
+#                highest = value
+#             if(value < lowest):
+#                lowest = value
+#       new_pic.append(row)
+#    if(scale_gray):
+#          for i in range(len(new_pic)):
+#             for j in range(len(new_pic[i])):
+#                new_pic[i][j] = int((new_pic[i][j] - lowest) * 255 / (highest - lowest))
+#    return new_pic
 
 ##### END VERSION 1 #####
 
@@ -221,7 +222,7 @@ def begin():
    to make the ASCII image.  Prints out in the terminal, but can be printed
    to a text file if pipelined into one.'''
    global scale_gray
-   pic = raw_input("Name of Image: ")
+   pic = "photos/"+raw_input("Name of Image: ")
    typed = raw_input("Invert colors? [y|N] ")
    if(ask_for_res):
       width = ask_for_int("What width? ")
