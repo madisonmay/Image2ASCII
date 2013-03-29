@@ -134,6 +134,47 @@ start = time.time()
 
 ##### END VERSION 1 #####
 
+def scale_pic(im, x = -1, y = -1):
+   height = im.size[1]
+   width = im.size[0]
+   if(x < 1):
+      w = 144
+   else:
+      w = x
+   if(y > 0):
+      h = y
+   else:
+      scaled = 0.5 * w * height // (width)
+      h = int(scaled)
+
+   size = (w, h)
+   im.draft("L", im.size)
+   im = im.resize(size)
+   im.save("edge_scale.png")
+   highest = 0
+   lowest = 255
+   gray = []
+   for y in range(h):
+      gray.append([])
+      for x in range(w):
+         val = im.getpixel((x,y))
+         if(type(val) is int):
+            weighted = val
+         else: #Necessary for PNG's.  Weights the values then scales them according to the transparency
+            weighted = val[0] * 0.21 + val[1] * 0.71 + val[2] * 0.07
+            weighted = weighted * val[3] // 255
+         gray[y].append(weighted)
+         if(weighted > highest):
+            highest = weighted
+         if(weighted < lowest):
+            lowest = weighted
+
+   if scale_gray and highest != lowest:
+      for i in range(len(gray)):
+         for j in range(len(gray[i])):
+            gray[i][j] = int((gray[i][j] - lowest) * 255 / (highest - lowest))
+   return gray   
+
 ##### BEGIN VERSION 2 #####
 
 def get_grayscale(s, x = -1, y = -1):
