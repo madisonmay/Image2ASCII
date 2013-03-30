@@ -14,6 +14,7 @@ from PIL import Image
 import pylab
 
 
+
 def begin():
 	name = "photos/" + raw_input("Name of Image: ")
 	tick()
@@ -42,7 +43,7 @@ def section_shape_graph(im_sec):
 				points.append([angle(c, p), log_d(c, p)])
 	return points
 
-def twelve_by_twelve_density(pic):
+def nine_by_ten(pic):
 	im = Image.open("photos/" + pic)
 	im.draft("L", im.size)
 	piece = []
@@ -57,9 +58,9 @@ def twelve_by_twelve_density(pic):
 
 	density = []
 
-	for y in range(12):
+	for y in range(10):
 		density.append([])
-		for x in range (12):
+		for x in range (9):
 			total = 0
 			number = 0
 			for i in range(int(x * x_por), int((x+1) * x_por)):
