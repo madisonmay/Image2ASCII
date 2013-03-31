@@ -69,7 +69,7 @@ def nine_by_ten(pic):
 					total = total + piece[j][i]
 					number = number + 1
 			val = total / float(number) / 255.0
-			
+
 			if(total / number < 128):
 				density[y].append("#")
 			else:
@@ -148,8 +148,8 @@ def compare(im1, im2):
 
 			val1 = im1.getpixel((i,j))
 			low = 255
-			for dx in range(-1, 2):
-				for dy in range(-1, 2):
+			for dx in range(0, 1):
+				for dy in range(0, 1):
 					if(i + dx > 0 and i + dx < size[0] and j + dy > 0 and j + dy < size[1]):
 
 						val2 = im2.getpixel((i + dx, j + dy))
