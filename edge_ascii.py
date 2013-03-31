@@ -148,8 +148,8 @@ def compare(im1, im2):
 
 			val1 = im1.getpixel((i,j))
 			low = 255
-			for dx in range(-0, 1):
-				for dy in range(-0, 1):
+			for dx in range(-1, 2):
+				for dy in range(-1, 2):
 					if(i + dx > 0 and i + dx < size[0] and j + dy > 0 and j + dy < size[1]):
 
 						val2 = im2.getpixel((i + dx, j + dy))
@@ -194,6 +194,16 @@ for i in range(32, 127):
 def compare_against_all(image):
 	lowest_val = 255 * 9 * 18
 	best = 32
+
+	total = 0
+	num_pix = 0
+	size = image.size
+	for i in range(size[0] * size[1]):
+		total = total + get_gray_val(image.getpixel((i%size[0],i/size[0])))
+		num_pix = num_pix + 1
+	if(total / num_pix < 5):
+		return 32
+
 	for i in range(len(all_char)):
 		c = compare(image, all_char[i])
 		if(c < lowest_val):
@@ -214,8 +224,10 @@ def get_image_string(image):
 #	print string
 
 if(__name__ == "__main__"):
-	image = Image.open("photos/smiley.jpg")
+	tick()
+	image = Image.open("photos/result.jpg")
 	get_image_string(image)
+	tock()
 #	tick()
 #	im1 = Image.open("photos/characters/32.png")
 #	im2 = Image.open("photos/characters/33.png")
