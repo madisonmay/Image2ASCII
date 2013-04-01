@@ -324,6 +324,16 @@ def get_image_string(image):
 			print((unichr(compare_against_all(image.crop((x, y, x + 9, y + 18))))), end='')
 		print()
 
+def ascii_to_file(image, filename):
+	f = open(filename, 'w+')
+	string = ""
+	for y in range(0, image.size[1], 18):
+		for x in range(0, image.size[0] - 7, 9):
+			string += unichr(compare_against_all(image.crop((x, y, x + 9, y + 18))))
+		string+='\n'
+	f.write(string)
+	f.close()
+
 if(__name__ == "__main__"):
 	tick()
 	image = Image.open("photos/result.jpg")

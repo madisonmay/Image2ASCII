@@ -1,22 +1,20 @@
 from PIL import Image
 import numpy as np
 import numpy.linalg as la
+import scipy.misc
 
 pic = "circle_test.jpg"
 im = Image.open("photos/" + pic)
-im = im.convert('1')
+im = im.convert('L')
 w, h = im.size
 m = np.matrix(list(im.getdata()))
-m = np.reshape(m , (w, h))
+m = np.reshape(m, (h, w))
 [u, s, v] = la.svd(m)
-C = np.zeros((w, h))
-k = 20
+c = np.zeros((h, w))
+
+k = w
 for j in range(k):
     add = s[j]*u[:,j]*v[:,j].transpose()
-    C += add
+    c += add
 
-for row in C:
-    print [int(x) for x in row]
-
-img = Image.fromarray(C, 'L')
-img.save('my.jpg')
+scipy.misc.imsave('outfile.jpg', c)
