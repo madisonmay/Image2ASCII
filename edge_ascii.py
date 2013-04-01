@@ -326,6 +326,6 @@ def get_image_string(image):
 
 if(__name__ == "__main__"):
 	tick()
-	image = Image.open("photos/result.jpg")
+	image = Image.open("photos/00001887.jpg")
 	get_image_string(image)
 	tock()
