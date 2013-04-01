@@ -1,19 +1,12 @@
 from __future__ import print_function
-from math import log
-from math import atan2 as atan
-from math import pi
-from math import hypot
-from math import acos
-from math import exp
-import edge_test as edge
-import main
-import numpy
 from ticktock import *
 from PIL import Image
+from math import hypot
+from char import char_info
 
 
+'''
 import pylab
-
 
 
 def begin():
@@ -104,7 +97,7 @@ def graph_test(s):
 	plot(all_p)
 
 def unicode_chars():
-	'''Used to generate every single unicode character.  Prints them in groups of 2^13 in order to keep it manageable.'''
+#	Used to generate every single unicode character.  Prints them in groups of 2^13 in order to keep it manageable.
 	string = ""
 	for i in range(2**0, 2**16):
 		char = unichr(i)
@@ -114,7 +107,6 @@ def unicode_chars():
 	for i in range(8):
 		print(string[i * spacing:(i + 1) * spacing])
 		raw_input("")
-
 def compare1(im1, im2):
 	im1.draft("L", im1.size)
 	im2.draft("L", im2.size)
@@ -122,7 +114,7 @@ def compare1(im1, im2):
 
 	delta = 0
 	for i in range(size[0] * size[1]):
-		loc = (i %size[0], i // size[0])
+		loc = (i size[0], i // size[0])
 		val1 = im1.getpixel(loc)
 		val2 = im2.getpixel(loc)
 
@@ -133,6 +125,11 @@ def compare1(im1, im2):
 		else:
 			delta = delta + gray2 - gray1
 	return delta
+'''
+
+fuzzy = False
+#all_char = []
+lowest_val = 255 * 18 * 8
 
 def compare(im1, im2):
 	im1.draft("L", im1.size)
@@ -143,13 +140,14 @@ def compare(im1, im2):
 	bright_b = 0 #Overall brightness for im2
 
 	delta = 0
-	for i in range(size[0]):
-		for j in range(size[1]):
-
+	for it in range(1, 1 + size[0]):
+		for jt in range(2, 2 + size[1]):
+			i = it % size[0]
+			j = jt % size[1]
 			val1 = im1.getpixel((i,j))
 			low = 255
-			for dx in range(0, 1):
-				for dy in range(0, 1):
+			for dx in range(-1, 2):
+				for dy in range(-1, 2):
 					if(i + dx > 0 and i + dx < size[0] and j + dy > 0 and j + dy < size[1]):
 
 						val2 = im2.getpixel((i + dx, j + dy))
@@ -169,6 +167,117 @@ def compare(im1, im2):
 				if(low == 0):
 					break
 			delta = delta + low
+
+			if(delta > lowest_val):
+				return lowest_val + 1
+
+	delta_bright = (bright_a-bright_b)# / (size[0] * size[1])
+	if(delta_bright < 0):
+		delta_bright = -delta_bright
+
+	delta = delta * 1 + delta_bright * 1
+	return delta
+
+def compare_unfuzzy2(im1, char_val):
+	im_data = im1.getdata()
+	ch_data = char_info[char_val - 32]
+
+	size = im1.size
+	delta = 0
+	bright_a = 0
+	bright_b = sum(ch_data)
+
+	for i in range(len(im_data)):
+		row = i % size[0]
+		col = i // size[0]
+
+		a = get_gray_val(im_data[i])
+		b = ch_data[col * 9 + row]
+
+		comp = a-b
+		if(comp < 0):
+			comp = -1 * comp
+		delta = delta + comp
+		bright_a = bright_a + a
+		if(delta > lowest_val):
+			return lowest_val + 1
+
+	delta_bright = bright_a - bright_b
+	if(delta_bright < 0):
+		delta_bright = -delta_bright
+	delta = delta * 1 + delta_bright * 1
+	return delta #How unfit the character is
+
+def compare_unfuzzy3(im_data, char_val, size): #Ignores the top row, bottom row, and rightmost line
+	ch_data = char_info[char_val - 32]
+
+	delta = 0
+	bright_a = 0
+	bright_b = sum(ch_data)
+
+	for i in range(size[0] + 1, len(im_data) - size[0]):
+		if((i + 1) % size[0] == 0):
+			continue
+		row = i % size[0]
+		col = i // size[0]
+
+		a = get_gray_val(im_data[i])
+		b = ch_data[col * 9 + row]
+
+		comp = a-b
+		if(comp < 0):
+			comp = -1 * comp
+		delta = delta + comp
+		bright_a = bright_a + a
+		if(delta > lowest_val):
+			return lowest_val + 1
+
+	delta_bright = bright_a - bright_b
+	if(delta_bright < 0):
+		delta_bright = -delta_bright
+	delta = delta * 1 + delta_bright * 1
+	return delta
+
+def compare2(im1, im2):
+	im1.draft("L", im1.size)
+	im2.draft("L", im2.size)
+	size = im1.size
+
+	bright_a = 0 #Overall brightness for im1
+	bright_b = 0 #Overall brightness for im2
+
+	delta = 0
+	for it in range(1, 1 + size[0]):
+		for jt in range(2, 2 + size[1]):
+			i = it % size[0]
+			j = jt % size[1]
+			val1 = im1.getpixel((i,j))
+			low = 255
+			for dx in range(-1, 2):
+				for dy in range(-1, 2):
+					if(i + dx > 0 and i + dx < size[0] and j + dy > 0 and j + dy < size[1]):
+
+						val2 = im2.getpixel((i + dx, j + dy))
+						a = get_gray_val(val1)
+						b = get_gray_val(val2)
+						if(dx == 0 and dy == 0):
+							bright_a = bright_a + a
+							bright_b = bright_b + b
+						comp = a - b
+						if(comp < 0):
+							comp = -50 * comp
+						comp = comp + (dx * dx + dy * dy * 0.7) * 100
+						if comp < low:
+							low = comp
+					if(low == 0):
+						break
+				if(low == 0):
+					break
+			delta = delta + low
+
+			if(delta > lowest_val):
+				return lowest_val + 1
+
 	delta_bright = (bright_a-bright_b)# / (size[0] * size[1])
 	if(delta_bright < 0):
 		delta_bright = -delta_bright
@@ -185,72 +294,38 @@ def get_gray_val(pixel):
 			val = val * pixel[3] / 255
 		return val
 
-all_char = []
-for i in range(32, 127):
-	all_char.append(Image.open("photos/characters/" + str(i) + ".png"))
-#for i in range(161, 256):
-#	all_char.append(Image.open("photos/characters/" + str(i) + ".png"))
-
 def compare_against_all(image):
+	global lowest_val
 	lowest_val = 255 * 9 * 18
 	best = 32
-
 	total = 0
-	num_pix = 0
-	size = image.size
-	for i in range(size[0] * size[1]):
-		total = total + get_gray_val(image.getpixel((i%size[0],i/size[0])))
-		num_pix = num_pix + 1
-	if(total / num_pix < 5):
-		return 32
 
-	for i in range(len(all_char)):
-		c = compare(image, all_char[i])
+	im_data = image.getdata()
+	for i in range(len(im_data)):
+		total = total + get_gray_val(im_data[i])
+	if total < 144 * 3:
+		return 32
+	for i in range(len(char_info)):
+		c = 0
+#		if(fuzzy):
+#			c = compare(image, i + 32)
+		if(not fuzzy):
+			c = compare_unfuzzy3(im_data, i + 32, image.size)
+
 		if(c < lowest_val):
 			lowest_val = c
-			if(i < 85):
-				best = 32 + i
-			else:
-#				print(i)
-				best = i - 85 + 161
+			best = 32 + i
 	return best
 
 def get_image_string(image):
 	string = ""
 	for y in range(0, image.size[1], 18):
-		for x in range(0, image.size[0] - 7, 8):
-			print((unichr(compare_against_all(image.crop((x, y, x + 8, y + 18))))), end='')
+		for x in range(0, image.size[0] - 7, 9):
+			print((unichr(compare_against_all(image.crop((x, y, x + 9, y + 18))))), end='')
 		print()
-#	print string
 
 if(__name__ == "__main__"):
 	tick()
 	image = Image.open("photos/result.jpg")
 	get_image_string(image)
 	tock()
-#	tick()
-#	im1 = Image.open("photos/characters/32.png")
-#	im2 = Image.open("photos/characters/33.png")
-#	print(compare(im2, im1))
-#	tock()
-	'''
-	tick()
-	images = []
-	base = 75
-	num = 20
-	for i in range(0, num):
-		images.append(Image.open("photos/characters/" + str(base + i) + ".png"))
-
-	best_combo = [0, 0]
-	lowest = 2**20
-	for i in range(base,base + num):
-		for j in range(base, base + num):
-			if(i == j):
-				continue
-			comp = compare(images[i - base], images[j-base])
-			if(comp < lowest):
-				lowest = comp
-				best_combo = [i, j]
-	tock()
-	print best_combo, lowest
-	'''
