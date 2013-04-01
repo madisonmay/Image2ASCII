@@ -49,7 +49,8 @@ scale_gray = True
 #Which version of the converter to use.
 #Version 1: Opens the image and scales it down
 #Version 2: Opens the image using draft to prescale it before hand
-version = 2
+#Version 3: Same as Version 2, but utilizes getdata as opposed to getpixel.  ~20 % faster
+version = 3
 
 ##### END CONFIGURATIONS #####
 
@@ -134,6 +135,8 @@ start = time.time()
 
 ##### END VERSION 1 #####
 
+
+##### BEGIN VERSION 2 #####
 def scale_pic(im, x = -1, y = -1):
    height = im.size[1]
    width = im.size[0]
@@ -176,7 +179,6 @@ def scale_pic(im, x = -1, y = -1):
    return gray   
 
 ##### BEGIN VERSION 2 #####
-
 def get_grayscale(s, x = -1, y = -1):
    im = Image.open(s)
    height = im.size[1]
@@ -218,8 +220,49 @@ def get_grayscale(s, x = -1, y = -1):
          for j in range(len(gray[i])):
             gray[i][j] = int((gray[i][j] - lowest) * 255 / (highest - lowest))
    return gray
-
 ##### END VERSION 2 #####
+
+##### BEGIN VERSION 3 #####
+def stronger(s, x = -1, y = -1):
+   im = Image.open(s)
+   height = im.size[1]
+   width = im.size[0]
+   if(x < 1):
+      w = 144
+   else:
+      w = x
+   if(y > 0):
+      h = y
+   else:
+      scaled = 0.5 * w * height // (width)
+      h = int(scaled)
+   size = (w, h)
+   im.draft("L", im.size)
+   im = im.resize(size)
+   highest = 0
+   lowest = 255
+   gray = []
+   im_data = im.getdata()
+   for i in range(len(im_data)):
+      if(i % w == 0):
+         gray.append([])
+      val = im_data[i]
+      if(type(val) is int):
+         weighted = val
+      else:
+         weighted = val[0] * 0.21 + val[1] * 0.71 + val[2] * 0.07
+         weighted = weighted * val[3] / 255
+      gray[i // w].append(weighted)
+      if(highest < weighted):
+         highest = weighted
+      if(lowest > weighted):
+         lowest = weighted
+   if scale_gray and highest != lowest:
+      for i in range(len(gray)):
+         for j in range(len(gray[i])):
+            gray[i][j] = int((gray[i][j] - lowest) * 255 / (highest - lowest))
+   return gray
+##### END VERSION 3 #####
 
 #### Misc. QOL functions useful for timing and testing
 
@@ -276,6 +319,8 @@ def begin():
    inverted = typed.lower() == "y"
 
    tick()
+   if version is 3:
+      ascii = stronger(pic, width, height)
    if version is 2:
       ascii = get_grayscale(pic, width, height)
    elif version is 1:

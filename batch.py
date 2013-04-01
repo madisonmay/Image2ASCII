@@ -5,7 +5,7 @@ from os import listdir
 from os.path import isfile, join
 input_dir = './test/'
 output_dir = './result/'
-last_file = ''
+last_file = '00002277.jpg'
 files = sorted([ f for f in listdir(input_dir) if isfile(join(input_dir,f)) and f > last_file])
 for f in files:
     image = Image.open(input_dir + f)
