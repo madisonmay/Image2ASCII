@@ -27,7 +27,7 @@ def imagify_all():
 	for i in range(1,6573):
 		num = str(i)
 		zeros = (8 - len(num)) * "0"
-		name = "./result/" + zeros + num + ".txt"
+		name = "./out/" + zeros + num + ".txt"
 		if(isfile(name[0:17] + ".jpg")):
 			continue
 		imagify(name)

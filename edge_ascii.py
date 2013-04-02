@@ -131,6 +131,15 @@ fuzzy = False
 #all_char = []
 lowest_val = 255 * 18 * 8
 
+eliminate_low_freq = True
+
+#Good for lower detail
+occurence = [32, 95, 34, 44, 94, 96, 45, 61, 126, 39, 76, 46, 59, 58, 60, 62, 42, 92, 43, 47, 41, 124, 91, 114, 40, 70, 74, 106, 93, 118, 63, 80, 102, 125, 99, 108, 123, 55, 90, 89, 49, 122, 67, 120, 121, 105, 84, 52, 86, 33, 88, 65, 116, 35, 107, 81, 69, 103, 110, 115, 37, 119, 38, 73, 117, 51, 87, 53, 53, 64, 72, 104, 83, 97, 50, 36, 112, 101, 71, 75, 77, 111, 113, 57, 57, 85, 98, 66, 79, 56, 54, 82, 78, 68, 48]
+#Good for busier pictures
+occurence = [32, 95, 45, 34, 96, 46, 126, 39, 44, 61, 64, 81, 94, 58, 103, 59, 76, 93, 91, 35, 43, 87, 42, 37, 38, 106, 124, 102, 84, 77, 63, 62, 62, 121, 70, 125, 108, 80, 72, 60, 109, 66, 119, 74, 56, 33, 52, 41, 65, 107, 123, 36, 67, 101, 47, 48, 48, 98, 82, 112, 112, 100, 57, 86, 99, 40, 40, 117, 75, 49, 122, 92, 89, 79, 104, 97, 110, 50, 50, 71, 51, 120, 116, 73, 90, 54, 115, 115, 105, 85, 85, 78, 53, 68, 83]
+occurence = occurence[:20]
+
+
 def compare(im1, im2):
 	im1.draft("L", im1.size)
 	im2.draft("L", im2.size)
@@ -208,12 +217,11 @@ def compare_unfuzzy2(im1, char_val):
 	delta = delta * 1 + delta_bright * 1
 	return delta #How unfit the character is
 
-def compare_unfuzzy3(im_data, char_val, size): #Ignores the top row, bottom row, and rightmost line
+def compare_unfuzzy3(im_data, char_val, size): #Takes >85% of the time
 	ch_data = char_info[char_val - 32]
 
 	delta = 0
 	bright_a = 0
-	bright_b = sum(ch_data)
 
 	for i in range(size[0] + 1, len(im_data) - size[0]):
 		if((i + 1) % size[0] == 0):
@@ -221,22 +229,28 @@ def compare_unfuzzy3(im_data, char_val, size): #Ignores the top row, bottom row,
 		row = i % size[0]
 		col = i // size[0]
 
-		a = get_gray_val(im_data[i])
+		if(type(im_data[i]) is tuple):
+			a = im_data[i][0] #Takes 1.2 s
+		else:
+			a = im_data[i]
 		b = ch_data[col * 9 + row]
-
+#		b = test(col, row, ch_data) #2.65, but may be due to previous silliness involving manipulations
 		comp = a-b
-		if(comp < 0):
-			comp = -1 * comp
+		if(comp < 0): #1.65 seconds
+			comp = -comp
 		delta = delta + comp
 		bright_a = bright_a + a
 		if(delta > lowest_val):
 			return lowest_val + 1
-
+	bright_b = sum(ch_data)
 	delta_bright = bright_a - bright_b
 	if(delta_bright < 0):
 		delta_bright = -delta_bright
 	delta = delta * 1 + delta_bright * 1
 	return delta
+
+def test(a, b, ch_data):
+	return ch_data[a * 9 + b]
 
 def compare2(im1, im2):
 	im1.draft("L", im1.size)
@@ -285,7 +299,7 @@ def compare2(im1, im2):
 	delta = delta * 1 + delta_bright * 1
 	return delta
 
-def get_gray_val(pixel):
+def get_gray_val(pixel):  #Currently takes HALF OF THE TIME, we need to make this FASTER
 	if type(pixel) is int:
 		return pixel
 	if type(pixel) is tuple:
@@ -293,6 +307,10 @@ def get_gray_val(pixel):
 		if(len(pixel) > 3):
 			val = val * pixel[3] / 255
 		return val
+
+def test_a(tup):
+	print(tup)
+	return tup[0] * 0.21 + tup[1] * 0.71 + tup[2] * 0.07
 
 def compare_against_all(image):
 	global lowest_val
@@ -302,19 +320,25 @@ def compare_against_all(image):
 
 	im_data = image.getdata()
 	for i in range(len(im_data)):
-		total = total + get_gray_val(im_data[i])
+		total = total + (im_data[i][0])
 	if total < 144 * 3:
 		return 32
-	for i in range(len(char_info)):
-		c = 0
-#		if(fuzzy):
-#			c = compare(image, i + 32)
-		if(not fuzzy):
+	if(not eliminate_low_freq):
+		for i in range(len(char_info)):
+			c = 0
 			c = compare_unfuzzy3(im_data, i + 32, image.size)
 
-		if(c < lowest_val):
-			lowest_val = c
-			best = 32 + i
+			if(c < lowest_val):
+				lowest_val = c
+				best = 32 + i
+	else:
+		for i in range(len(occurence)):
+			c = 0
+			c = compare_unfuzzy3(im_data, occurence[i], image.size)
+			if(c < lowest_val):
+				lowest_val = c
+				best = occurence[i]
+
 	return best
 
 def get_image_string(image):
@@ -334,8 +358,28 @@ def ascii_to_file(image, filename):
 	f.write(string)
 	f.close()
 
+def multi_file(images, filename):
+	f = open(filename, 'w+')
+	eliminate_low_freq = False
+	for image in images:
+		string = ""
+		for y in range(0, image.size[1], 18):
+			for x in range(0, image.size[0] - 7, 9):
+				string += unichr(compare_against_all(image.crop((x, y, x + 9, y + 18))))
+			string+='\n'
+		f.write(string)
+	eliminate_low_freq = True
+	f.close()
+
+def set_occurence(occ):
+	occurence = occ
+	eliminate_low_freq = True
+
 if(__name__ == "__main__"):
 	tick()
-	image = Image.open("photos/00001887.jpg")
+#	name = "photos/result.jpg"
+	name = "in/00000640.jpg"
+	image = Image.open(name)
 	get_image_string(image)
 	tock()
+
