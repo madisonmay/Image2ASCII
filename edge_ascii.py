@@ -3,6 +3,7 @@ from ticktock import *
 from PIL import Image
 from math import hypot
 from char import char_info
+from multiprocessing import Pool
 
 
 '''
@@ -209,32 +210,58 @@ def compare_unfuzzy2(im1, char_val):
 	return delta #How unfit the character is
 
 def compare_unfuzzy3(im_data, char_val, size): #Ignores the top row, bottom row, and rightmost line
+	#Most current, optimized version of image to character match
+
+	#char info is a global variable with ascii character pixel data stored
 	ch_data = char_info[char_val - 32]
 
+	#measure of difference between source image and ascii character
 	delta = 0
+
+	#brightness of source image
 	bright_a = 0
+
+	#brightness value equivalent to sum of greyscale values of ascii character
 	bright_b = sum(ch_data)
 
+	#check only pixels not on the edges of the images, because ascii characters have a black pixel frame
 	for i in range(size[0] + 1, len(im_data) - size[0]):
+		#eliminating edges
 		if((i + 1) % size[0] == 0):
 			continue
 		row = i % size[0]
 		col = i // size[0]
 
+		#convert image to greyscale
 		a = get_gray_val(im_data[i])
+
+		#get corresponding pixel from comparison image
 		b = ch_data[col * 9 + row]
 
+		#net difference between ascii pixel in given location and image pixel in same location
+		#range: 0 - 255
 		comp = a-b
+
+		#absolute value
 		if(comp < 0):
 			comp = -1 * comp
+
+		#total difference
 		delta = delta + comp
+
+		#brightness of comparison image is updated
 		bright_a = bright_a + a
 		if(delta > lowest_val):
 			return lowest_val + 1
 
+	#difference in brightnesses
 	delta_bright = bright_a - bright_b
+
+	#absolute value
 	if(delta_bright < 0):
 		delta_bright = -delta_bright
+
+	#best match has similar shape and similar brightness
 	delta = delta * 1 + delta_bright * 1
 	return delta
 
@@ -286,51 +313,84 @@ def compare2(im1, im2):
 	return delta
 
 def get_gray_val(pixel):
+	#handle multiple file types
+	#could potentially batch convert to cut processing time
+
+	#pixels are already grayscale
 	if type(pixel) is int:
 		return pixel
+
+	#rgb --> bw conversion
 	if type(pixel) is tuple:
+		#could save time by converting using pil
 		val = pixel[0] * 0.21 + pixel[1] * 0.71 + pixel[2] * 0.07
+
+		#handling transparency values
 		if(len(pixel) > 3):
 			val = val * pixel[3] / 255
 		return val
 
 def compare_against_all(image):
 	global lowest_val
+
+	#worst possible match
 	lowest_val = 255 * 9 * 18
+
+	#current best ascii character match
 	best = 32
 	total = 0
 
+	#pixels --> array
 	im_data = image.getdata()
+
+	#for each value in the array,
 	for i in range(len(im_data)):
 		total = total + get_gray_val(im_data[i])
+
+	#if total is below threshold, space (ascii character 32) is the best match
 	if total < 144 * 3:
 		return 32
+
+	#compare to ascii characters
 	for i in range(len(char_info)):
 		c = 0
+
+#		fuzzy setting deprecated in favor of more efficient implementation
 #		if(fuzzy):
 #			c = compare(image, i + 32)
-		if(not fuzzy):
+
+		if not fuzzy:
+			#compare to a single ascii character.  c represents error
 			c = compare_unfuzzy3(im_data, i + 32, image.size)
 
-		if(c < lowest_val):
+		#if a new best match is found, overwrite variable best
+		if c < lowest_val:
 			lowest_val = c
 			best = 32 + i
+
 	return best
 
+#used for processing a single file and outputting to terminal
 def get_image_string(image):
 	string = ""
 	for y in range(0, image.size[1], 18):
 		for x in range(0, image.size[0] - 7, 9):
+			#a single character
 			print((unichr(compare_against_all(image.crop((x, y, x + 9, y + 18))))), end='')
+		#output a line of chars
 		print()
 
+#used for batch processing and writing to file
 def ascii_to_file(image, filename):
 	f = open(filename, 'w+')
 	string = ""
 	for y in range(0, image.size[1], 18):
 		for x in range(0, image.size[0] - 7, 9):
+			#add best char match
 			string += unichr(compare_against_all(image.crop((x, y, x + 9, y + 18))))
+		#begin next line
 		string+='\n'
+	#write entire result to file
 	f.write(string)
 	f.close()
 
